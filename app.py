@@ -3,10 +3,6 @@ import requests
 import streamlit as st
 from pathlib import Path
 
-# ── API 서버 주소 ──
-# 환경변수 DSU_API_URL 이 설정되어 있으면 그 값을 사용하고,
-# 없으면 기본값(로컬 개발용)을 씁니다.
-# 배포 시: export DSU_API_URL=http://<로컬PC_공인IP>:8000
 API_BASE_URL = os.environ.get("DSU_API_URL", "http://localhost:8000")
 ASK_ENDPOINT = f"{API_BASE_URL}/api/ask"
 API_TIMEOUT = 120   # 초 (LLM 추론 시간을 고려해 충분히 여유를 줍니다)
@@ -386,10 +382,12 @@ if st.session_state.last_sources:
         source_pdf = item.get("source_pdf", "")
         title      = item.get("title", "")
         article_no = item.get("article_no") or "-"
+        context_title = item.get("context_title", "")
 
         label = (
             f"{idx}. {article_no} | {title}"
             + (f" · 📁 {source_pdf}" if source_pdf else "")
+            + (f" · 📁 {context_title}" if context_title else "")
         )
 
         with st.expander(label):
@@ -414,7 +412,7 @@ if st.session_state.last_sources:
                 st.markdown(content, unsafe_allow_html=True)
 
 # ── 하단 고정 입력창 ──
-user_query = st.chat_input("메시지를 입력하세요...")
+user_query = st.chat_input("메시지를 입력하세요…")
 if user_query and user_query.strip():
     run_query(user_query)
     st.rerun()
