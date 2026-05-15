@@ -10,7 +10,7 @@ API_TIMEOUT = 120   # 초 (LLM 추론 시간을 고려해 충분히 여유를 �
 st.set_page_config(
     page_title="동서대학교 학칙 챗봇",
     page_icon="📘",
-    layout="centered",
+    layout="wide",
 )
 
 PAGE_IMAGE_DIR = Path("data/page_images")   # 프론트엔드 서버에 이미지가 없으면 표시 생략
@@ -42,9 +42,11 @@ html, body, [class*="css"] {
 }
 
 .block-container {
-  max-width: 860px !important;
-  padding-top: 60px !important;
-  padding-bottom: 120px !important;
+  max-width: 1200px !important;
+  padding-top: 32px !important;
+  padding-bottom: 40px !important;
+  padding-left: 2rem !important;
+  padding-right: 2rem !important;
 }
 
 /* 헤더 */
@@ -166,15 +168,15 @@ html, body, [class*="css"] {
 .stExpander {
   background: var(--surface) !important;
   border: 1px solid var(--border) !important;
-  border-radius: 12px !important;
+  border-radius: 10px !important;
   box-shadow: var(--shadow-card) !important;
-  margin-bottom: 8px !important;
+  margin-bottom: 4px !important;
   overflow: hidden !important;
 }
 .stExpander:hover { box-shadow: var(--shadow-hover) !important; }
-.stExpander > div:first-child { padding: 13px 16px !important; }
+.stExpander > div:first-child { padding: 8px 12px !important; }
 .stExpander summary {
-  font-size: 0.88rem !important;
+  font-size: 0.78rem !important;
   font-weight: 600 !important;
   color: var(--text-primary) !important;
 }
@@ -220,6 +222,25 @@ html, body, [class*="css"] {
 [data-testid="stChatInputSubmitButton"] > button {
   background: var(--dsu-red-dark) !important;
   border-radius: 999px !important;
+}
+            
+/* 대화 내역 스크롤 박스 전용 */
+.chat-scroll-area {
+    max-height: 500px; /* 원하는 높이로 조절 가능 */
+    overflow-y: auto;
+    padding-right: 15px; /* 스크롤바와 내용 간격 */
+    margin-bottom: 20px;
+    /* 스크롤바 디자인 (Chrome, Edge 등) */
+}
+.chat-scroll-area::-webkit-scrollbar {
+    width: 6px;
+}
+.chat-scroll-area::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 10px;
+}
+.chat-scroll-area::-webkit-scrollbar-track {
+    background: transparent;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -277,7 +298,7 @@ def call_api(query: str, top_k: int = 5) -> dict:
 
 def run_query(query: str):
     """API를 호출하고 세션 상태를 업데이트합니다."""
-    with st.spinner("AI가 학칙을 분석하고 있습니다... (수 초~수십 초 소요)"):
+    if True:
         try:
             data = call_api(query)
         except requests.exceptions.ConnectionError:
@@ -315,7 +336,8 @@ def run_query(query: str):
     st.session_state.last_keywords = data.get("keywords", [])
 
 
-# ── 헤더 ──
+
+# ── 전체 헤더 ──
 st.markdown("""
 <div class="dsu-header">
   <div class="dsu-header-left">
@@ -329,90 +351,244 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ── 자주 묻는 질문 ──
-st.markdown('<div class="dsu-section-label">자주 묻는 질문</div>', unsafe_allow_html=True)
-q_list = [
-    ("🎓 휴학",     "휴학은 몇 학기까지 가능한가요?"),
-    ("📚 전공선택", "전공 선택 시기는 언제인가요?"),
-    ("👥 교원양성", "교원양성 위원회 구성은?"),
-    ("📄 연구서류", "연구 제출서류 안내"),
-]
-cols = st.columns(4)
-for i, (btn_label, q_text) in enumerate(q_list):
-    if cols[i].button(btn_label, use_container_width=True):
-        st.session_state.pending_query = q_text
-        st.rerun()
+# ── 2컬럼 레이아웃: 왼쪽=채팅입력, 오른쪽=결과 ──
+col_left, col_right = st.columns([1, 2], gap="large")
 
-# ── 자주 묻는 질문 버튼으로 들어온 쿼리 처리 ──
+# ══ 왼쪽: 채팅 입력 패널 ══
+with col_left:
+    st.markdown("""
+    <style>
+    /* 왼쪽 패널 카드 스타일 */
+    /* FAQ 레이블 */
+    .faq-label {
+      font-size: 0.68rem; font-weight: 700;
+      letter-spacing: 1.2px; text-transform: uppercase;
+      color: var(--text-muted); margin-bottom: 10px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .faq-label::before {
+      content: '';
+      display: inline-block;
+      width: 3px; height: 12px;
+      background: var(--dsu-red);
+      border-radius: 2px;
+    }
+
+    /* 질문하기 레이블 */
+    .ask-label {
+      font-size: 0.68rem; font-weight: 700;
+      letter-spacing: 1.2px; text-transform: uppercase;
+      color: var(--text-muted); margin: 16px 0 6px 0;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .ask-label::before {
+      content: '';
+      display: inline-block;
+      width: 3px; height: 12px;
+      background: var(--dsu-red);
+      border-radius: 2px;
+    }
+
+    /* FAQ 버튼 */
+    .stButton > button {
+      background: white !important;
+      border: 1.5px solid #EDD8D8 !important;
+      color: #8B1A1A !important;
+      border-radius: 10px !important;
+      font-size: 0.78rem !important;
+      font-weight: 600 !important;
+      font-family: 'Noto Sans KR', sans-serif !important;
+      padding: 8px 10px !important;
+      transition: all 0.15s ease !important;
+      box-shadow: 0 1px 4px rgba(123,28,28,0.07) !important;
+    }
+    .stButton > button:hover {
+      background: #C20324 !important;
+      color: white !important;
+      border-color: #C20324 !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 4px 14px rgba(194,3,36,0.22) !important;
+    }
+    </style>
+    <div class="faq-label">자주 묻는 질문</div>
+    """, unsafe_allow_html=True)
+
+    q_list = [
+        ("🎓 휴학",     "휴학은 몇 학기까지 가능한가요?"),
+        ("📚 전공선택", "전공 선택 시기는 언제인가요?"),
+        ("👥 교원양성", "교원양성 위원회 구성은?"),
+        ("📄 연구서류", "연구 제출서류 안내"),
+    ]
+    for btn_label, q_text in q_list:
+        if st.button(btn_label, use_container_width=True, key=f"faq_{btn_label}"):
+            st.session_state.pending_query = q_text
+            st.rerun()
+
+    st.markdown('<div class="ask-label">질문하기</div>', unsafe_allow_html=True)
+
+    # 채팅 입력
+    user_input = st.chat_input("질문을 입력하세요…")
+
+    # 스피너 고정 위치 (채팅창 바로 밑)
+    spinner_slot = st.empty()
+
+# ── 자주 묻는 질문 버튼 쿼리 처리 ──
 if st.session_state.pending_query:
     query = st.session_state.pending_query
     st.session_state.pending_query = ""
-    run_query(query)
+    with spinner_slot:
+        with st.spinner("AI가 학칙을 분석하고 있습니다..."):
+            run_query(query)
 
-# ── 대화 내용 ──
-if st.session_state.chat_history:
-    st.markdown('<div class="dsu-divider">대화</div>', unsafe_allow_html=True)
-    current = st.session_state.chat_history[-1]
-
-    st.markdown(f"""
-    <div class="user-row">
-      <div class="user-bubble">{current["question"]}</div>
-      <div class="user-avatar">👤</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown(f"""
-    <div class="bot-row">
-      <div class="bot-avatar">🎓</div>
-      <div class="bot-bubble">{current["answer"].replace(chr(10), "<br>")}</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    if st.session_state.last_keywords:
-        badges = "".join(
-            [f'<span class="kw-badge"># {kw}</span>' for kw in st.session_state.last_keywords]
-        )
-        st.markdown(f'<div class="kw-wrap">{badges}</div>', unsafe_allow_html=True)
-
-# ── 근거 문서 ──
-if st.session_state.last_sources:
-    st.markdown('<div class="dsu-section-label">근거 문서</div>', unsafe_allow_html=True)
-    for idx, item in enumerate(st.session_state.last_sources, start=1):
-        page       = item.get("page", "")
-        source_pdf = item.get("source_pdf", "")
-        title      = item.get("title", "")
-        article_no = item.get("article_no") or "-"
-        context_title = item.get("context_title", "")
-
-        label = (
-            f"{idx}. {article_no} | {title}"
-            + (f" · 📁 {source_pdf}" if source_pdf else "")
-            + (f" · 📁 {context_title}" if context_title else "")
-        )
-
-        with st.expander(label):
-            image_path  = get_page_image_path(page, source_pdf)
-            image_first = should_show_image_first(item)
-            content     = item.get("content", "") or ""
-
-            if image_path:
-                if image_first:
-                    st.markdown(
-                        '<div class="evidence-img-note">💡 표/서식 형태의 내용이므로 원본 이미지를 먼저 표시합니다.</div>',
-                        unsafe_allow_html=True,
-                    )
-                    st.image(str(image_path), caption=f"원본 페이지 ({source_pdf}, {page}p)", use_column_width=True)
-                    if st.checkbox("텍스트로 내용 확인", key=f"txt_{idx}"):
-                        st.markdown(content, unsafe_allow_html=True)
-                else:
-                    st.markdown(content, unsafe_allow_html=True)
-                    with st.expander("📄 원본 페이지 이미지 보기"):
-                        st.image(str(image_path), use_column_width=True)
-            else:
-                st.markdown(content, unsafe_allow_html=True)
-
-# ── 하단 고정 입력창 ──
-user_query = st.chat_input("메시지를 입력하세요…")
-if user_query and user_query.strip():
-    run_query(user_query)
+# ── 직접 입력 쿼리 처리 ──
+if user_input and user_input.strip():
+    with spinner_slot:
+        with st.spinner("AI가 학칙을 분석하고 있습니다..."):
+            run_query(user_input)
     st.rerun()
+
+# ══ 오른쪽: 대화 + 근거 문서 ══
+# ══ 오른쪽: 대화 + 근거 문서 ══
+# ══ 오른쪽: 대화 + 근거 문서 ══
+with col_right:
+    # 1. 대화 기록 (스크롤 박스 적용)
+    if st.session_state.chat_history:
+        st.markdown('<div class="dsu-divider">대화 내역</div>', unsafe_allow_html=True)
+        
+        # CSS/HTML/JS를 하나의 iframe(components.html)에 묶어서 렌더링
+        # → document.getElementById가 같은 문서 안에서 동작해 스크롤 확실히 작동
+        chat_items_html = ""
+        for chat in st.session_state.chat_history:
+            q = chat["question"].replace("<", "&lt;").replace(">", "&gt;")
+            a = chat["answer"].replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br>")
+            chat_items_html += f"""
+<div class="user-row">
+  <div class="user-bubble">{q}</div>
+  <div class="user-avatar">👤</div>
+</div>
+<div class="bot-row">
+  <div class="bot-avatar">🎓</div>
+  <div class="bot-bubble">{a}</div>
+</div>
+<div style="margin-bottom:20px"></div>"""
+
+        import streamlit.components.v1 as components
+        components.html(f"""
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600&display=swap');
+* {{ margin:0; padding:0; box-sizing:border-box; }}
+body {{ font-family: 'Noto Sans KR', sans-serif; background: transparent; }}
+
+#chat-wrap {{
+  height: 480px;
+  overflow-y: auto;
+  padding: 8px 4px 8px 0;
+}}
+#chat-wrap::-webkit-scrollbar {{ width: 6px; }}
+#chat-wrap::-webkit-scrollbar-thumb {{ background: #E8DEDE; border-radius: 10px; }}
+#chat-wrap::-webkit-scrollbar-track {{ background: transparent; }}
+
+.user-row {{ display:flex; justify-content:flex-end; align-items:flex-end; gap:10px; margin:12px 0 8px; }}
+.user-avatar {{
+  width:30px; height:30px; background:#A32D2D;
+  border-radius:50%; display:flex; align-items:center; justify-content:center;
+  color:white; font-size:13px; flex-shrink:0;
+}}
+.user-bubble {{
+  max-width:68%; background:#C20324; color:white;
+  padding:13px 18px; border-radius:18px 18px 4px 18px;
+  font-size:0.93rem; font-weight:500; line-height:1.65;
+  box-shadow:0 4px 16px rgba(123,28,28,0.22); word-break:keep-all;
+}}
+.bot-row {{ display:flex; justify-content:flex-start; align-items:flex-end; gap:10px; margin:8px 0 12px; }}
+.bot-avatar {{
+  width:30px; height:30px; background:#C20324;
+  border-radius:50%; display:flex; align-items:center; justify-content:center;
+  color:white; font-size:13px; flex-shrink:0;
+}}
+.bot-bubble {{
+  max-width:80%; background:#FFFFFF; color:#1A1A1A;
+  padding:15px 20px; border-radius:18px 18px 18px 4px;
+  font-size:0.93rem; line-height:1.8;
+  box-shadow:0 2px 12px rgba(123,28,28,0.08);
+  border:1px solid #E8DEDE; word-break:keep-all;
+}}
+</style>
+</head>
+<body>
+<div id="chat-wrap">
+{chat_items_html}
+<div id="bottom"></div>
+</div>
+<script>
+  var wrap = document.getElementById("chat-wrap");
+  wrap.scrollTop = wrap.scrollHeight;
+</script>
+</body>
+</html>
+""", height=500, scrolling=False)
+
+        # 2. 최신 근거 문서
+        if st.session_state.last_sources:
+            st.markdown('<div class="dsu-divider"></div>', unsafe_allow_html=True)
+            st.markdown('<div class="dsu-section-label">💡 최근 답변의 근거 자료</div>', unsafe_allow_html=True)
+            
+
+            for idx, item in enumerate(st.session_state.last_sources, start=1):
+                page          = item.get("page", "")
+                source_pdf    = item.get("source_pdf", "")
+                title         = item.get("title", "")
+                article_no    = item.get("article_no") or "-"
+                context_title = item.get("context_title", "")
+
+                
+                label = (
+                  f"{idx}. {article_no} | {title}"
+                  + (f"  ·  📁 {source_pdf}" if source_pdf else "")
+                  + (f"  ·  📁 {context_title}" if context_title else "")
+                )
+
+                # expander(토글) + 다운로드 버튼을 한 줄에 배치
+                col_exp, col_dl = st.columns([10, 1], gap="small")
+                with col_exp:
+                    with st.expander(label):
+                        image_path = get_page_image_path(page, source_pdf)
+                        content    = item.get("content", "") or ""
+
+                        if image_path:
+                            st.image(str(image_path), use_column_width=True)
+                            if st.checkbox("텍스트로 내용 확인", key=f"last_txt_{idx}"):
+                                st.markdown(content, unsafe_allow_html=True)
+                        else:
+                            st.markdown(content, unsafe_allow_html=True)
+                with col_dl:
+                    if source_pdf:
+                        dl_url = f"{API_BASE_URL}/download/{source_pdf}"
+                        fname = source_pdf if source_pdf.endswith(".hwpx") else source_pdf + ".hwpx"
+                        try:
+                            file_resp = requests.get(dl_url, timeout=10)
+                            if file_resp.status_code == 200:
+                                st.download_button(
+                                    label="📂",
+                                    data=file_resp.content,
+                                    file_name=fname,
+                                    mime="application/octet-stream",
+                                    help="원본 규정 다운로드 (.hwpx)",
+                                    key=f"dl_{idx}",
+                                )
+                        except Exception:
+                            st.link_button("📂", dl_url, help="원본 규정 다운로드 (.hwpx)")
+
+    else:
+        st.markdown("""
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+                    height:260px;color:#9A8A8A;gap:12px;">
+          <div style="font-size:2.5rem;">📘</div>
+          <div style="font-size:0.95rem;font-weight:600;">왼쪽에서 질문을 입력하세요</div>
+          <div style="font-size:0.8rem;">학칙에 관한 무엇이든 물어보세요</div>
+        </div>
+        """, unsafe_allow_html=True)
