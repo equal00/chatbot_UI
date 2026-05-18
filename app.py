@@ -210,7 +210,6 @@ html, body, [class*="css"] {
   border-color: var(--dsu-red) !important;
   color: #791F1F !important;
 }
-}
 
 /* 근거 번호 뱃지 */
 .src-header { display: flex; align-items: center; gap: 10px; }
