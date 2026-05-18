@@ -186,14 +186,30 @@ html, body, [class*="css"] {
 .stLinkButton > a {
   height: 38px !important;
   min-height: 38px !important;
-  padding: 0 10px !important;
-  font-size: 1rem !important;
-  line-height: 38px !important;
+  padding: 0 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   border-radius: 8px !important;
   width: 100% !important;
+  background-color: white !important;
+  border: 1px solid var(--border) !important;
+  color: var(--dsu-red) !important;
+  transition: all 0.18s ease !important;
+}
+.stDownloadButton > button span,
+.stLinkButton > a span {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+}
+.stDownloadButton > button:hover,
+.stLinkButton > a:hover {
+  background-color: #FCEBEB !important;
+  border-color: var(--dsu-red) !important;
+  color: #791F1F !important;
+}
 }
 
 /* 근거 번호 뱃지 */
@@ -588,7 +604,8 @@ body {{ font-family: 'Noto Sans KR', sans-serif; background: transparent; }}
                             file_resp = requests.get(dl_url, timeout=10)
                             if file_resp.status_code == 200:
                                 st.download_button(
-                                    label="📥",
+                                    label="",
+                                    icon=":material/file_download:",
                                     data=file_resp.content,
                                     file_name=fname,
                                     mime="application/octet-stream",
@@ -596,7 +613,7 @@ body {{ font-family: 'Noto Sans KR', sans-serif; background: transparent; }}
                                     key=f"dl_{idx}",
                                 )
                         except Exception:
-                            st.link_button("📥", dl_url, help="원본 규정 다운로드 (.hwpx)")
+                            st.link_button("", dl_url, help="원본 규정 다운로드 (.hwpx)", icon=":material/file_download:")
 
     else:
         st.markdown("""
