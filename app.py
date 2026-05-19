@@ -36,6 +36,19 @@ st.markdown("""
   --radius: 16px;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1A1212;
+    --surface: #2A1F1F;
+    --border: #3D2B2B;
+    --text-primary: #F0E8E8;
+    --text-secondary: #C8B0B0;
+    --text-muted: #8A7070;
+    --shadow-card: 0 2px 12px rgba(0,0,0,0.3);
+    --shadow-hover: 0 6px 24px rgba(0,0,0,0.4);
+  }
+}
+
 html, body, [class*="css"] {
   font-family: 'Noto Sans KR', sans-serif !important;
   background: var(--bg) !important;
@@ -119,6 +132,12 @@ html, body, [class*="css"] {
   transform: translateY(-1px) !important;
   box-shadow: 0 4px 12px rgba(123,28,28,0.2) !important;
 }
+@media (prefers-color-scheme: dark) {
+  .stButton > button {
+    background: var(--surface) !important;
+    border-color: var(--border) !important;
+  }
+}
 
 /* 사용자 말풍선 */
 .user-row { display: flex; justify-content: flex-end; align-items: flex-end; gap: 10px; margin: 12px 0 8px; }
@@ -163,6 +182,13 @@ html, body, [class*="css"] {
   padding: 4px 10px; border-radius: 999px;
   font-size: 0.78rem; font-weight: 600;
 }
+@media (prefers-color-scheme: dark) {
+  .kw-badge {
+    background: #3D1F1F;
+    color: #F7A0A0;
+    border-color: #5A2B2B;
+  }
+}
 
 /* 근거 문서 expander */
 .stExpander {
@@ -179,36 +205,6 @@ html, body, [class*="css"] {
   font-size: 0.78rem !important;
   font-weight: 600 !important;
   color: var(--text-primary) !important;
-}
-
-/* 다운로드 버튼 - expander 헤더 높이에 맞춤 */
-.stDownloadButton > button,
-.stLinkButton > a {
-  height: 38px !important;
-  min-height: 38px !important;
-  padding: 0 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  border-radius: 8px !important;
-  width: 100% !important;
-  background-color: white !important;
-  border: 1px solid var(--border) !important;
-  color: var(--dsu-red) !important;
-  transition: all 0.18s ease !important;
-}
-.stDownloadButton > button span,
-.stLinkButton > a span {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 100% !important;
-}
-.stDownloadButton > button:hover,
-.stLinkButton > a:hover {
-  background-color: #FCEBEB !important;
-  border-color: var(--dsu-red) !important;
-  color: #791F1F !important;
 }
 
 /* 근거 번호 뱃지 */
@@ -237,6 +233,22 @@ html, body, [class*="css"] {
   margin-bottom: 8px; padding: 8px 12px;
   background: #FCEBEB; border-radius: 8px;
   border-left: 3px solid var(--dsu-red);
+}
+@media (prefers-color-scheme: dark) {
+  .src-tag {
+    background: #3D1F1F;
+    color: #F7A0A0;
+    border-color: #5A2B2B;
+  }
+  .src-appendix-tag {
+    background: #3D2B1F;
+    color: #FDBA74;
+    border-color: #5A3D2B;
+  }
+  .evidence-img-note {
+    background: #3D1F1F;
+    border-color: var(--dsu-red);
+  }
 }
 
 /* st.chat_input 스타일 */
