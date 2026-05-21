@@ -474,6 +474,21 @@ with col_left:
     # 스피너 고정 위치 (채팅창 바로 밑)
     spinner_slot = st.empty()
 
+    # spacer로 안내 텍스트를 카드 맨 아래로 밀기
+    for _ in range(8):
+        st.empty()
+
+    # 하단 고정 안내 텍스트 (이용약관 스타일)
+    st.markdown("""
+    <div style="margin-top:20px; padding-top:10px;
+                border-top:1px solid #E8DEDE;
+                font-size:0.68rem; color:#B0A0A0; line-height:1.6;">
+      이 챗봇은 학교 규정에 대한 참고용 안내를 제공합니다.
+      답변은 최신 공식 문서와 다를 수 있으며, 중요한 판단은 반드시
+      학교 공식 규정과 담당 부서로 확인해 주세요.
+    </div>
+    """, unsafe_allow_html=True)
+
 # ── 자주 묻는 질문 버튼 쿼리 처리 ──
 if st.session_state.pending_query:
     query = st.session_state.pending_query
@@ -512,7 +527,9 @@ with col_right:
   <div class="bot-avatar">🎓</div>
   <div class="bot-bubble">{a}</div>
 </div>
-<div style="margin-bottom:20px"></div>"""
+<div style="display:flex; justify-content:flex-start; padding-left:34px; margin:3px 0 12px;">
+  <span style="font-size:0.72rem; color:#9A8A8A; max-width:80%; line-height:1.5;">주의: AI가 요약한 정보이므로 실제 학칙과 미세한 차이가 있을 수 있습니다.</span>
+</div>"""
 
         import streamlit.components.v1 as components
         components.html(f"""
@@ -577,8 +594,23 @@ body {{ font-family: 'Noto Sans KR', sans-serif; background: transparent; }}
         # 2. 최신 근거 문서
         if st.session_state.last_sources:
             st.markdown('<div class="dsu-divider"></div>', unsafe_allow_html=True)
-            st.markdown('<div class="dsu-section-label">💡 최근 답변의 근거 자료</div>', unsafe_allow_html=True)
-            
+
+            # 키워드 감지 시 중요 사항 박스
+            IMPORTANT_KEYWORDS = {"휴학", "복학", "수강", "등록", "제적", "졸업", "학점", "전과", "편입", "시험", "장학/등록금"}
+            detected = IMPORTANT_KEYWORDS & set(st.session_state.last_keywords)
+            if detected:
+                st.markdown("""
+                <div style="font-size:0.72rem; color:#9A8A8A; line-height:1.5; margin-bottom:8px;">
+                  이 질문은 학적과 관련된 중요 사항입니다. 최종 확인은 반드시 학과 사무실 또는 담당부서를 통하셔야 합니다.
+                </div>
+                """, unsafe_allow_html=True)
+
+            st.markdown("""
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+              <div class="dsu-section-label" style="margin:0;">💡 최근 답변의 근거 자료</div>
+              <div style="font-size:0.72rem; color:#9A8A8A;">⇓ 더 자세한 내용은 해당 규정 파일을 다운로드하여 확인하세요</div>
+            </div>
+            """, unsafe_allow_html=True)
 
             for idx, item in enumerate(st.session_state.last_sources, start=1):
                 page          = item.get("page", "")
